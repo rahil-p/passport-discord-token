@@ -7,6 +7,8 @@ By plugging into Passport, Discord
 authentication can be easily and unobtrusively integrated into any application or framework that supports Connect-style
 middleware, including Express.
 
+[![npm](https://img.shields.io/npm/v/passport-discord-token?logo=npm)](https://www.npmjs.com/package/passport-discord-token)
+
 ---
 <a name="note"></a>
 
