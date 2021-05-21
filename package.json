@@ -1,0 +1,91 @@
+{
+  "name": "passport-discord-token",
+  "version": "1.0.0",
+  "description": "Discord access token authentication strategy for Passport",
+  "license": "MIT",
+  "homepage": "https://github.com/rahil-p/passport-discord-token#readme",
+  "bugs": {
+    "url": "https://github.com/rahil-p/passport-discord-token/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rahil-p/passport-discord-token.git"
+  },
+  "author": {
+    "name": "Rahil Patel",
+    "url": "https://github.com/rahil-p"
+  },
+  "keywords": [
+    "passport",
+    "discord",
+    "auth",
+    "authn",
+    "authentication",
+    "identity",
+    "token"
+  ],
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "files": [
+    "src"
+  ],
+  "main": "src/index.js",
+  "scripts": {
+    "test": "nyc mocha"
+  },
+  "dependencies": {
+    "passport-oauth": "^1.0.0"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-passport-strategy": "^1.0.1",
+    "codecov": "^3.8.2",
+    "eslint": "^7.26.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.23.2",
+    "eslint-plugin-mocha": "^8.1.0",
+    "mocha": "^8.4.0",
+    "nyc": "^15.1.0"
+  },
+  "eslintConfig": {
+    "env": {
+      "commonjs": true,
+      "es2020": true,
+      "node": true,
+      "mocha": true
+    },
+    "extends": [
+      "airbnb-base",
+      "plugin:mocha/recommended"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 11
+    },
+    "plugins": [
+      "mocha"
+    ],
+    "rules": {
+      "consistent-return": 0,
+      "indent": [
+        2,
+        "tab",
+        {
+          "SwitchCase": 1
+        }
+      ],
+      "max-len": [
+        1,
+        {
+          "code": 120
+        }
+      ],
+      "no-tabs": 0,
+      "no-underscore-dangle": 0,
+      "object-curly-spacing": [
+        2,
+        "never"
+      ]
+    }
+  }
+}
