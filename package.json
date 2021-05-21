@@ -32,6 +32,8 @@
   ],
   "main": "src/index.js",
   "scripts": {
+		"coverage": "codecov --token=$CODECOV_TOKEN",
+		"lint": "eslint --fix .",
     "test": "nyc mocha"
   },
   "dependencies": {
