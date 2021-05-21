@@ -8,9 +8,9 @@ middleware, including Express.
 
 #### Note:
 
-_This strategy is primarily intended for authorizing requests from native clients that must obtain a Discord 
-access token using client-side flows to authenticate with your Node.js backend. For browser clients,
-a strategy like [passport-discord](https://github.com/nicholastay/passport-discord.git) is recommended._
+_This strategy is primarily intended for authorizing requests from native clients that must obtain a Discord access
+token using client-side flows before authenticating with your Node.js backend. For browser clients, a strategy like
+[passport-discord](https://github.com/nicholastay/passport-discord.git) is recommended._
 
 [comment]: <> (![Build Status]&#40;https://img.shields.io/travis/drudge/passport-discord-token.svg&#41;)
 [comment]: <> (![Coverage]&#40;https://img.shields.io/coveralls/drudge/passport-discord-token.svg&#41;)
@@ -36,7 +36,7 @@ will be issued a client ID and client secret, which need to be provided to the s
 #### Configure Strategy
 
 The strategy requires a `verify` callback, which accepts these credentials and calls `done` providing a `user`, as well
-as options specifying a client ID and client secret.
+as options specifying a `clientID` and `clientSecret`.
 
 ```js
 const DiscordTokenStrategy = require('passport-discord-token');
@@ -53,12 +53,16 @@ passport.use(new DiscordTokenStrategy({
 
 #### Authenticate Requests
 
-Use `passport.authenticate()`, specifying the 'discord-token' strategy, to authenticate requests.
+Use `passport.authenticate()`, specifying the `'discord-token'` strategy, to authenticate requests.
 
 For example, as route middleware in an Express application:
 
 ```js
-app.get('/auth/discord-token', passport.authenticate('discord-token'));
+app.post('/auth/discord-token', 
+    passport.authenticate('discord-token'),
+    (req, res) => {
+        res.redirect('/auth/success');
+    });
 ```
 
 ### Client-Side
@@ -77,7 +81,23 @@ strategy ([_see note above_](#note)). Here are some options:
 
 #### Client Requests
 
+Clients can send a request to a route that uses the `passport-discord-token` strategy by providing an access token in the request's body, query parameters, or headers.
 
+- Body
+  ```shell
+  POST /auth/discord-token
+  
+  access_token=<TOKEN>
+  ```
+- Query Parameter
+  ```shell
+  GET /auth/discord-token?access_token=<TOKEN>
+  ```
+- Authorization Header
+  ```shell
+  GET /auth/discord-token
+  Authorization: Bearer <TOKEN>
+  ```
 
 ## License
 [MIT License](https://github.com/rahil-p/passport-discord-token/blob/master/LICENSE)
