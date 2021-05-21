@@ -11,6 +11,15 @@ const {OAuth2Strategy, InternalOAuthError} = require('passport-oauth');
  *
  * @type {DiscordTokenStrategy}
  * @extends OAuth2Strategy
+ * @example
+ * passport.use(new DiscordTokenStrategy({
+ *     clientID: DISCORD_CLIENT_ID,
+ *     clientSecret: DISCORD_CLIENT_SECRET,
+ * }, (accessToken, refreshToken, profile, done) => {
+ *     User.findOrCreate({discordId: profile.id}, (error, user) => {
+ *         return done(error, user);
+ *     });
+ * }));
  */
 class DiscordTokenStrategy extends OAuth2Strategy {
 	/**
