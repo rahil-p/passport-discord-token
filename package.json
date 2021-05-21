@@ -32,9 +32,8 @@
   ],
   "main": "src/index.js",
   "scripts": {
-		"coverage": "codecov --token=$CODECOV_TOKEN",
-		"lint": "eslint --fix .",
-    "test": "nyc mocha"
+    "lint": "eslint --fix .",
+    "test": "nyc --reporter=lcov mocha"
   },
   "dependencies": {
     "passport-oauth": "^1.0.0"
