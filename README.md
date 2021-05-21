@@ -9,8 +9,8 @@ middleware, including Express.
 #### Note:
 
 _This strategy is primarily intended for authorizing requests from native clients that must obtain a Discord access
-token using client-side flows before authenticating with your Node.js backend. For browser clients, a strategy like
-[passport-discord](https://github.com/nicholastay/passport-discord.git) is recommended._
+token using client-side flows (e.g. Discord Game SDK, PKCE) before authenticating with your Node.js backend. For browser
+clients, a strategy like [passport-discord](https://github.com/nicholastay/passport-discord.git) is recommended._
 
 [comment]: <> (![Build Status]&#40;https://img.shields.io/travis/drudge/passport-discord-token.svg&#41;)
 [comment]: <> (![Coverage]&#40;https://img.shields.io/coveralls/drudge/passport-discord-token.svg&#41;)
