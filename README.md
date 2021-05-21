@@ -8,7 +8,7 @@ authentication can be easily and unobtrusively integrated into any application o
 middleware, including Express.
 
 [![npm](https://img.shields.io/npm/v/passport-discord-token?logo=npm)](https://www.npmjs.com/package/passport-discord-token)
-[![codecov]()]()
+[![codecov](https://codecov.io/gh/rahil-p/passport-discord-token/branch/master/graph/badge.svg?token=LSOQ2ZCWIS)](https://codecov.io/gh/rahil-p/passport-discord-token)
 
 ---
 <a name="note"></a>
