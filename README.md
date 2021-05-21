@@ -6,14 +6,14 @@ This module lets you authenticate using Discord in your Node.js applications. By
 authentication can be easily and unobtrusively integrated into any application or framework that supports Connect-style
 middleware, including Express.
 
-####Note:
+#### Note:
 
 _This strategy is primarily intended for authorizing requests from native clients that must obtain a Discord 
 access token using client-side flows to authenticate with your Node.js backend. For browser clients,
 a strategy like [passport-discord](https://github.com/nicholastay/passport-discord.git) is recommended._
 
-![Build Status](https://img.shields.io/travis/drudge/passport-discord-token.svg)
-![Coverage](https://img.shields.io/coveralls/drudge/passport-discord-token.svg)
+[comment]: <> (![Build Status]&#40;https://img.shields.io/travis/drudge/passport-discord-token.svg&#41;)
+[comment]: <> (![Coverage]&#40;https://img.shields.io/coveralls/drudge/passport-discord-token.svg&#41;)
 
 ## Installation
 ```shell
