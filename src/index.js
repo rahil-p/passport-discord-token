@@ -27,20 +27,26 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 * @param options
 	 * @param verify
 	 */
-	constructor(options = {
-		authorizationURL: 'https://discord.com/api/oauth2/authorize',
-		tokenURL: 'https://discord.com/api/oauth2/token',
-		accessTokenField: 'access_token',
-		refreshTokenField: 'refresh_token',
-		profileURL: 'https://discord.com/api/users/@me',
-
+	constructor({
+		authorizationURL = 'https://discord.com/api/oauth2/authorize',
+		tokenURL = 'https://discord.com/api/oauth2/token',
+		profileURL = 'https://discord.com/api/users/@me',
+		accessTokenField = 'access_token',
+		refreshTokenField = 'refresh_token',
+		...rest
 	}, verify) {
+		const options = {
+			authorizationURL,
+			tokenURL,
+			...rest,
+		};
+
 		super(options, verify);
 
 		this.name = 'discord-token';
-		this._accessTokenField = options.accessTokenField;
-		this._refreshTokenField = options.refreshTokenField;
-		this._profileURL = options.profileURL;
+		this._profileURL = profileURL;
+		this._accessTokenField = accessTokenField;
+		this._refreshTokenField = refreshTokenField;
 		this._oauth2.useAuthorizationHeaderforGET(true);
 	}
 
@@ -81,6 +87,7 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 * Retrieve the Discord user profile
 	 * @param {String} accessToken
 	 * @param {Function} done
+	 * TODO: support `connections` and `guilds` scopes as optional fields in the `profile` object
 	 */
 	userProfile(accessToken, done) {
 		this._oauth2.get(this._profileURL, accessToken, (error, body) => {
@@ -126,7 +133,7 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 			const bearerRgx = /Bearer (.*)/;
 			const match = headerValue.match(bearerRgx);
 			return match && match[1];
-		});
+		})();
 	}
 }
 
