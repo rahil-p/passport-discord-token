@@ -10,7 +10,7 @@ middleware, including Express.
 
 _This strategy is primarily intended for authorizing requests from native clients that must obtain a Discord access
 token using client-side flows (e.g. Discord Game SDK, PKCE) before authenticating with your Node.js backend. For browser
-clients, a strategy like [passport-discord](https://github.com/nicholastay/passport-discord.git) is recommended._
+clients, a strategy like [passport-discord](https://github.com/nicholastay/passport-discord.git) is better suited._
 
 [comment]: <> (![Build Status]&#40;https://img.shields.io/travis/drudge/passport-discord-token.svg&#41;)
 [comment]: <> (![Coverage]&#40;https://img.shields.io/coveralls/drudge/passport-discord-token.svg&#41;)
@@ -19,7 +19,6 @@ clients, a strategy like [passport-discord](https://github.com/nicholastay/passp
 ```shell
 npm install passport-discord-token
 ```
-or
 ```shell
 yarn add passport-discord-token
 ```
@@ -30,8 +29,8 @@ yarn add passport-discord-token
 
 #### Create an Application
 Before using `passport-discord-token`, you must register an application with Discord.  If you have not already done so,
-create an application in the [Discord Developer Portal](https://discord.com/developers/applications).  Your application
-will be issued a client ID and client secret, which need to be provided to the strategy.
+create an application in the <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a>.
+Your application will be issued a client ID and client secret, which need to be provided to the strategy.
 
 #### Configure Strategy
 
@@ -61,7 +60,7 @@ For example, as route middleware in an Express application:
 app.post('/auth/discord-token', 
     passport.authenticate('discord-token'),
     (req, res) => {
-        res.redirect('/auth/success');
+		res.send(req.user ? 200 : 401);
     });
 ```
 
@@ -74,9 +73,9 @@ strategy ([_see note above_](#note)). Here are some options:
 - [**Discord Game SDK**](https://discord.com/developers/docs/game-sdk/sdk-starter-guide) - Call
   [`ApplicationManager.GetOAuth2Token`](https://discord.com/developers/docs/game-sdk/applications#getoauth2token) to
   obtain a token directly from your game.
-- **Authorization Code with PKCE Flow*** - A secure means for obtaining an access token from a native client. _Although
-  this flow is supported by Discord's API, documentation is pending. See the
-  [RFC7636](https://datatracker.ietf.org/doc/html/rfc7636) specification for guidance._
+- **[Authorization Code Flow](https://discord.com/developers/docs/topics/oauth2#authorization-code-grant)**
+  - **with PKCE ([RFC7636](https://datatracker.ietf.org/doc/html/rfc7636))** - A secure means for obtaining an access
+	token from a native client. _Although this flow is supported by Discord's API, documentation is pending._
 - **[Implicit Grant](https://discord.com/developers/docs/topics/oauth2#implicit-grant)**
 
 #### Client Requests
