@@ -1,12 +1,12 @@
-# Blitz-API Pull Request
+# Pull Request
 
 ## Checklist
 
-- [ ] Increment the package version in [`/package.json`](https://github.com/rahil-p/passport-discord-token/tree/master/package.json) (e.g. `yarn version [--major | --minor | --patch]`)?
+- [ ] Increment the package version in [`/package.json`](https://github.com/rahil-p/passport-discord-token/tree/master/package.json)
 
-- [ ] Describe the changes in the pull request under [***Description***](#description)?
+- [ ] Describe the changes in the pull request under [***Description***](#description)
 
-- [ ] Link relevant issues under [***GitHub Issues***](#github-issues)?
+- [ ] Link relevant issues under [***GitHub Issues***](#github-issues)
 
 ## Resolutions
 
