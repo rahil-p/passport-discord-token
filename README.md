@@ -8,6 +8,7 @@ authentication can be easily and unobtrusively integrated into any application o
 middleware, including Express.
 
 [![npm](https://img.shields.io/npm/v/passport-discord-token?logo=npm)](https://www.npmjs.com/package/passport-discord-token)
+[![codecov]()]()
 
 ---
 <a name="note"></a>
@@ -17,7 +18,8 @@ middleware, including Express.
 This strategy is primarily intended for authorizing requests from native clients that must obtain a Discord access
 token using client-side flows (e.g. Discord Game SDK, PKCE) before authenticating with your Node.js backend. 
 
-For browser clients, a strategy like [passport-discord](https://github.com/nicholastay/passport-discord.git) is better suited.
+For browser clients, a strategy like [passport-discord](https://github.com/nicholastay/passport-discord.git) is better
+suited.
 
 ---
 
@@ -81,16 +83,17 @@ strategy ([_see note_](#note)). Here are some options:
   [`ApplicationManager.GetOAuth2Token`](https://discord.com/developers/docs/game-sdk/applications#getoauth2token) to
   obtain a token directly from your game.
 
-**[Authorization Code Flow](https://discord.com/developers/docs/topics/oauth2#authorization-code-grant)**
+[**Authorization Code Flow**](https://discord.com/developers/docs/topics/oauth2#authorization-code-grant)
   
 - **with PKCE** ([RFC7636](https://datatracker.ietf.org/doc/html/rfc7636)) - A secure means for obtaining an access
   token from a native client. _Although this modified flow is supported by Discord's API, documentation is pending._
 
-**[Implicit Grant](https://discord.com/developers/docs/topics/oauth2#implicit-grant)**
+[**Implicit Grant**](https://discord.com/developers/docs/topics/oauth2#implicit-grant)
 
 ### Client Requests
 
-Clients can send a request to a route that uses the `passport-discord-token` strategy by providing an access token in the request's body, query parameters, or headers.
+Clients can send a request to a route that uses the `passport-discord-token` strategy by providing an access token in
+the request's body, query parameters, or headers.
 
 **Body:**
 ```shell
