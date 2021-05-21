@@ -1,0 +1,40 @@
+{
+  "env": {
+	"commonjs": true,
+	"es2020": true,
+	"node": true,
+	"mocha": true
+  },
+  "extends": [
+	"airbnb-base",
+	"plugin:mocha/recommended"
+  ],
+  "parserOptions": {
+	"ecmaVersion": 11
+  },
+  "plugins": [
+	"mocha"
+  ],
+  "rules": {
+	"consistent-return": 0,
+	"indent": [
+	  2,
+	  "tab",
+	  {
+		"SwitchCase": 1
+	  }
+	],
+	"max-len": [
+	  1,
+	  {
+		"code": 120
+	  }
+	],
+	"no-tabs": 0,
+	"no-underscore-dangle": 0,
+	"object-curly-spacing": [
+	  2,
+	  "never"
+	]
+  }
+}
