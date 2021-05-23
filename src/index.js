@@ -14,7 +14,6 @@ const {OAuth2Strategy, InternalOAuthError} = require('passport-oauth');
  * @example
  * passport.use(new DiscordTokenStrategy({
  *     clientID: DISCORD_CLIENT_ID,
- *     clientSecret: DISCORD_CLIENT_SECRET,
  * }, (accessToken, refreshToken, profile, done) => {
  *     User.findOrCreate({discordId: profile.id}, (error, user) => {
  *         return done(error, user);
@@ -26,14 +25,12 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 * Constructs an instance of the `DiscordTokenStrategy`
 	 * @param {Object} options
 	 * @param {string} options.clientID - client ID of application registered in the Discord Developer Portal
-	 * @param {string} options.clientSecret - client secret of application registered in the Discord Developer Portal
 	 * @param {string} [options.accessTokenField='access_token'] - exclude `connections` when fetching profile fields
 	 * @param {string} [options.refreshTokenField='refresh_token'] exclude `guilds` when fetching profile fields
 	 * @param {Function} verify
 	 */
 	constructor({
 		clientID,
-		clientSecret,
 		accessTokenField = 'access_token',
 		refreshTokenField = 'refresh_token',
 		/* Standard Discord OAuth Config */
@@ -48,7 +45,6 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	}, verify) {
 		const options = {
 			clientID,
-			clientSecret,
 			authorizationURL,
 			tokenURL,
 			...rest,

@@ -7,7 +7,7 @@ const DiscordTokenStrategy = require('..');
 const {assert} = chai;
 chai.use(chaiPassportStrategy);
 
-const CLIENT_CONFIG = {clientID: 'foo', clientSecret: 'bar'};
+const CLIENT_CONFIG = {clientID: 'foo'};
 const FAKE_PROFILE = JSON.stringify({
 	id: '268473310986240001',
 	username: 'Discord',

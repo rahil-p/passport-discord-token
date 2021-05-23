@@ -39,19 +39,18 @@ yarn add passport-discord-token
 ### Create an Application
 Before using `passport-discord-token`, you must register an application with Discord.  If you have not already done so,
 create an application in the <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a>.
-Your application will be issued a client ID and client secret, which need to be provided to the strategy.
+Your application will be issued a client ID, which needs to be provided to the strategy.
 
 ### Configure Strategy
 
 The strategy requires a `verify` callback, which accepts these credentials and calls `done` providing a `user`, as well
-as options specifying a `clientID` and `clientSecret`.
+as options specifying a `clientID`.
 
 ```js
 const DiscordTokenStrategy = require('passport-discord-token');
 
 passport.use(new DiscordTokenStrategy({
     clientID: DISCORD_CLIENT_ID,
-    clientSecret: DISCORD_CLIENT_SECRET,
 }, (accessToken, refreshToken, profile, done) => {
     User.findOrCreate({discordId: profile.id}, (error, user) => {
         return done(error, user);
