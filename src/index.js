@@ -24,18 +24,31 @@ const {OAuth2Strategy, InternalOAuthError} = require('passport-oauth');
 class DiscordTokenStrategy extends OAuth2Strategy {
 	/**
 	 * Constructs an instance of the `DiscordTokenStrategy`
-	 * @param options
-	 * @param verify
+	 * @param {Object} options
+	 * @param {string} options.clientID - client ID of application registered in the Discord Developer Portal
+	 * @param {string} options.clientSecret - client secret of application registered in the Discord Developer Portal
+	 * @param {string} [options.accessTokenField='access_token'] - exclude `connections` when fetching profile fields
+	 * @param {string} [options.refreshTokenField='refresh_token'] exclude `guilds` when fetching profile fields
+	 * @param {Function} verify
 	 */
 	constructor({
-		authorizationURL = 'https://discord.com/api/oauth2/authorize',
-		tokenURL = 'https://discord.com/api/oauth2/token',
-		profileURL = 'https://discord.com/api/users/@me',
+		clientID,
+		clientSecret,
 		accessTokenField = 'access_token',
 		refreshTokenField = 'refresh_token',
-		...rest
+		/* Standard Discord OAuth Config */
+		authorizationURL = 'https://discord.com/api/oauth2/authorize', // passed to base class
+		tokenURL = 'https://discord.com/api/oauth2/token', // passed to base class
+		profileURL = 'https://discord.com/api/users/@me',
+		connectionsURL = 'https://discord.com/api/users/@me/connections',
+		guildsURL = 'https://discord.com/api/users/@me/guilds',
+		connectionsScope = 'connections',
+		guildsScope = 'guilds',
+		...rest // passed to base class
 	}, verify) {
 		const options = {
+			clientID,
+			clientSecret,
 			authorizationURL,
 			tokenURL,
 			...rest,
@@ -45,6 +58,10 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 
 		this.name = 'discord-token';
 		this._profileURL = profileURL;
+		this._connectionsURL = connectionsURL;
+		this._guildsURL = guildsURL;
+		this._connectionsScope = connectionsScope;
+		this._guildsScope = guildsScope;
 		this._accessTokenField = accessTokenField;
 		this._refreshTokenField = refreshTokenField;
 		this._oauth2.useAuthorizationHeaderforGET(true);
@@ -98,7 +115,6 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 				const profile = {
 					provider: 'discord',
 					...json,
-					_raw: body,
 				};
 
 				done(null, profile);
