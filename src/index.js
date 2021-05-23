@@ -11,6 +11,7 @@ const {OAuth2Strategy, InternalOAuthError} = require('passport-oauth');
  *
  * @type {DiscordTokenStrategy}
  * @extends OAuth2Strategy
+ * @extends Strategy
  * @example
  * passport.use(new DiscordTokenStrategy({
  *     clientID: DISCORD_CLIENT_ID,
@@ -68,18 +69,17 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 		this._loadUserProfile(accessToken, (error, profile) => {
 			if (error) return this.error(error);
 
-			this._verify(...[
-				...(this._passReqToCallback ? [req] : []),
-				accessToken,
-				refreshToken,
-				profile,
-				(err, user, info) => {
-					if (err) return this.error(err);
-					if (!user) return this.fail(info);
+			const done = (err, user, info) => {
+				if (err) return this.error(err);
+				if (!user) return this.fail(info);
 
-					return this.success(user, info);
-				},
-			]);
+				return this.success(user, info);
+			};
+
+			const args = [accessToken, refreshToken, profile, done];
+			if (this._passReqToCallback) args.unshift(req);
+
+			this._verify(...args);
 		});
 	}
 
@@ -99,6 +99,7 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 				const profile = {
 					provider: 'discord',
 					...json,
+					_raw: body,
 				};
 
 				done(null, profile);
