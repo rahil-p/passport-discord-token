@@ -1,6 +1,6 @@
 {
   "name": "passport-discord-token",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Discord access token authentication strategy for Passport",
   "license": "MIT",
   "homepage": "https://github.com/rahil-p/passport-discord-token#readme",
