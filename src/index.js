@@ -27,6 +27,7 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 * @param {string} options.clientID - client ID of application registered in the Discord Developer Portal
 	 * @param {string} [options.accessTokenField='access_token'] - exclude `connections` when fetching profile fields
 	 * @param {string} [options.refreshTokenField='refresh_token'] exclude `guilds` when fetching profile fields
+	 * @param {*} [options.rest] - additional arguments to pass to the base `OAuth2Strategy` class
 	 * @param {Function} verify
 	 */
 	constructor({
