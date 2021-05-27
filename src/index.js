@@ -25,42 +25,39 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 * Constructs an instance of the `DiscordTokenStrategy`
 	 * @param {Object} options
 	 * @param {string} options.clientID - client ID of application registered in the Discord Developer Portal
-	 * @param {string} [options.accessTokenField='access_token'] - exclude `connections` when fetching profile fields
-	 * @param {string} [options.refreshTokenField='refresh_token'] exclude `guilds` when fetching profile fields
-	 * @param {*} [options.rest] - additional arguments to pass to the base `OAuth2Strategy` class
+	 * @param {string} [options.accessTokenField='access_token'] - the field in which to look up the access token
+	 * @param {string} [options.refreshTokenField='refresh_token'] the field in which to look up the refresh token
+	 * @param {boolean} [options.checkOAuth2Header] - check for the access token in an OAuth 2.0 `Authorization` header
+	 * @param {string[]} [options.lookups] - `req` fields in which to perform token lookups
+	 * 										 (defaults: `body`, `query`, `headers`)
+	 * @param {...*} [options.rest] - additional arguments to pass to the base `OAuth2Strategy` class
 	 * @param {Function} verify
 	 */
 	constructor({
 		clientID,
 		accessTokenField = 'access_token',
 		refreshTokenField = 'refresh_token',
-		/* Standard Discord OAuth Config */
-		authorizationURL = 'https://discord.com/api/oauth2/authorize', // passed to base class
-		tokenURL = 'https://discord.com/api/oauth2/token', // passed to base class
-		profileURL = 'https://discord.com/api/users/@me',
-		connectionsURL = 'https://discord.com/api/users/@me/connections',
-		guildsURL = 'https://discord.com/api/users/@me/guilds',
-		connectionsScope = 'connections',
-		guildsScope = 'guilds',
+		checkOAuth2Header = true,
+		lookups = ['body', 'query', 'headers'],
 		...rest // passed to base class
 	}, verify) {
 		const options = {
 			clientID,
-			authorizationURL,
-			tokenURL,
+			authorizationURL: 'https://discord.com/api/oauth2/authorize',
+			tokenURL: 'https://discord.com/api/oauth2/token',
 			...rest,
 		};
 
 		super(options, verify);
 
 		this.name = 'discord-token';
-		this._profileURL = profileURL;
-		this._connectionsURL = connectionsURL;
-		this._guildsURL = guildsURL;
-		this._connectionsScope = connectionsScope;
-		this._guildsScope = guildsScope;
+		/* Strategy Config */
 		this._accessTokenField = accessTokenField;
 		this._refreshTokenField = refreshTokenField;
+		this._lookups = lookups;
+		this._checkOAuth2Header = checkOAuth2Header;
+		/* Discord OAuth Config */
+		this._profileURL = rest._profileURL || 'https://discord.com/api/users/@me';
 		this._oauth2.useAuthorizationHeaderforGET(true);
 	}
 
@@ -69,9 +66,9 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 * @param {Object} req = HTTP request object
 	 */
 	authenticate(req) {
-		const accessToken = this.constructor.lookup(req, this._accessTokenField)
-			|| this.constructor.parseOAuth2Header(req);
-		const refreshToken = this.constructor.lookup(req, this._refreshTokenField);
+		const accessToken = this.lookup(req, this._accessTokenField)
+			|| (this._checkOAuth2Header && this.constructor.parseOAuth2Header(req));
+		const refreshToken = this.lookup(req, this._refreshTokenField);
 
 		if (!accessToken) {
 			return this.fail({
@@ -98,9 +95,9 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 
 	/**
 	 * Retrieve the Discord user profile
-	 * @param {String} accessToken
+	 * @param {String} accessToken - access token parsed from the HTTP request
 	 * @param {Function} done
-	 * TODO: support `connections` and `guilds` scopes as optional fields in the `profile` object
+	 * TODO: support additional scopes provided to the strategy (e.g. `connections` and `guilds`)
 	 */
 	userProfile(accessToken, done) {
 		this._oauth2.get(this._profileURL, accessToken, (error, body) => {
@@ -128,14 +125,21 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 * @param {String} field - lookup field
 	 * @return {false | String} lookup value for field within the body, query, or headers of the request
 	 */
-	static lookup(req, field) {
-		return (req.body && req.body[field])
-			|| (req.query && req.query[field])
-			|| (req.headers && (req.headers[field] || req.headers[field.toLowerCase()]));
+	lookup(req, field) {
+		let result;
+		this._lookups.find((lookup) => {
+			const fields = req[lookup];
+			result = (fields && fields[field])
+				|| (field === 'headers' && fields[field.toLowerCase()]);
+
+			return result;
+		});
+
+		return result;
 	}
 
 	/**
-	 * Parses an OAuth2 RFC6750 bearer authorization token from the headers of a request
+	 * Parses an OAuth2 bearer authorization token (RFC6750) from the headers of a request
 	 * @param {Object} req = HTTP request object
 	 * @return {false | String} bearer authorization token
 	 */
