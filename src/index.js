@@ -24,13 +24,16 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	/**
 	 * Constructs an instance of the `DiscordTokenStrategy`
 	 * @param {Object} options
-	 * @param {string} options.clientID - client ID of application registered in the Discord Developer Portal
-	 * @param {string} [options.clientSecret] - client secret of application registered in the Discord Developer Portal
-	 * @param {string} [options.accessTokenField='access_token'] - the field in which to look up the access token
-	 * @param {string} [options.refreshTokenField='refresh_token'] the field in which to look up the refresh token
-	 * @param {boolean} [options.checkOAuth2Header] - check for the access token in an OAuth 2.0 `Authorization` header
+	 * @param {string} options.clientID - application client ID
+	 * @param {string} [options.clientSecret] - application client secret
+	 *   (if missing, refresh token exchange will produce an error)
+	 * @param {string} [options.accessTokenField='access_token'] - access token lookup field
+	 * @param {string} [options.refreshTokenField='refresh_token'] - refresh token lookup field
+	 * @param {boolean} [options.oAuth2HeaderFallback=true] - enables checking for the access token in an OAuth 2.0
+	 * 	 `Authorization` header
+	 * @param {boolean} [options.refreshTokenFallback=true] - enables refresh token exchange as a fallback
 	 * @param {string[]} [options.lookups] - `req` fields in which to perform token lookups
-	 * 										 (defaults: `body`, `query`, `headers`)
+	 *   (defaults: `body`, `query`, `headers`)
 	 * @param {...*} [options.rest] - additional arguments to pass to the base `OAuth2Strategy` class
 	 * @param {Function} verify
 	 */
@@ -39,8 +42,9 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 		clientSecret,
 		accessTokenField = 'access_token',
 		refreshTokenField = 'refresh_token',
-		checkOAuth2Header = true,
 		lookups = ['body', 'query', 'headers'],
+		oAuth2HeaderFallback = true,
+		refreshTokenFallback = true,
 		...rest // passed to base class
 	}, verify) {
 		const options = {
@@ -57,7 +61,8 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 		this._accessTokenField = accessTokenField;
 		this._refreshTokenField = refreshTokenField;
 		this._lookups = lookups;
-		this._checkOAuth2Header = checkOAuth2Header;
+		this._oAuth2HeaderFallback = oAuth2HeaderFallback;
+		this._refreshTokenFallback = refreshTokenFallback;
 		/* Discord OAuth Config */
 		this._profileURL = rest._profileURL || 'https://discord.com/api/users/@me';
 		this._oauth2.useAuthorizationHeaderforGET(true);
@@ -70,12 +75,18 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 */
 	authenticate(req) {
 		let accessToken = this.lookup(req, this._accessTokenField)
-			|| (this._checkOAuth2Header && this.constructor.parseOAuth2Header(req));
+			|| (this._oAuth2HeaderFallback && this.constructor.parseOAuth2Header(req));
 		let refreshToken = this.lookup(req, this._refreshTokenField);
 
 		if (!accessToken && !refreshToken) {
 			return this.fail({
 				message: 'Neither access token nor refresh token could be parsed from the request',
+			});
+		}
+
+		if (!accessToken && !this._refreshTokenFallback) {
+			return this.fail({
+				message: 'Access token could not be parsed from the request (refresh token exchange disabled)',
 			});
 		}
 
@@ -104,7 +115,11 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 				refreshToken,
 				{grant_type: 'refresh_token'},
 				(error, _accessToken, _refreshToken) => {
-					if (error) return this.error(error);
+					if (error) {
+						return this.error(
+							new InternalOAuthError('Failed to exchange refresh token for access token', error),
+						);
+					}
 
 					accessToken = _accessToken;
 					refreshToken = _refreshToken;
@@ -119,7 +134,7 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 
 	/**
 	 * Retrieve the Discord user profile
-	 * @param {String} accessToken - access token parsed from the HTTP request
+	 * @param {string} accessToken - access token parsed from the HTTP request
 	 * @param {Function} done
 	 * TODO: support additional scopes provided to the strategy (e.g. `connections` and `guilds`)
 	 */
@@ -133,6 +148,7 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 				const profile = {
 					provider: 'discord',
 					...json,
+					_raw: body,
 				};
 
 				done(null, profile);
@@ -146,15 +162,16 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 * Looks up the value of a field within a request; this method checks in order the body, query, and headers of a
 	 * request until the value is found
 	 * @param {Object} req = HTTP request object
-	 * @param {String} field - lookup field
-	 * @return {false | String} lookup value for field within the body, query, or headers of the request
+	 * @param {string} field - lookup field
+	 * @return {string | boolean} lookup value for field within the body, query, or headers of the request
 	 */
 	lookup(req, field) {
 		let result;
 		this._lookups.find((lookup) => {
 			const fields = req[lookup];
-			result = (fields && fields[field])
-				|| (field === 'headers' && fields[field.toLowerCase()]);
+			result = lookup === 'headers'
+				? this.constructor.headerLookup(req, field)
+				: !!fields && typeof fields === 'object' && fields[field];
 
 			return result;
 		});
@@ -163,17 +180,36 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	}
 
 	/**
+	 * Looks up a field (case-insensitive as per RFC7230) in the provided headers object
+	 * @param {Object} req = HTTP request object
+	 * @param {string} field - field for which to do a case-insensitive lookup
+	 * @return {boolean}
+	 */
+	static headerLookup(req, field) {
+		if (!req.headers || typeof req.headers !== 'object') return false;
+
+		const _field = field.toLowerCase();
+		let headerValue;
+		Object.keys(req.headers).find((key) => {
+			headerValue = key.toLowerCase() === _field && req.headers[key];
+			return headerValue;
+		});
+
+		return headerValue || false;
+	}
+
+	/**
 	 * Parses an OAuth2 bearer authorization token (RFC6750) from the headers of a request
 	 * @param {Object} req = HTTP request object
-	 * @return {false | String} bearer authorization token
+	 * @return {string | boolean} bearer authorization token
 	 */
 	static parseOAuth2Header(req) {
-		const headerValue = req.headers && (req.headers.Authorization || req.headers.authorization);
+		const headerValue = this.headerLookup(req, 'authorization');
 
 		return headerValue && (() => {
 			const bearerRgx = /Bearer (.*)/;
 			const match = headerValue.match(bearerRgx);
-			return match && match[1];
+			return !!match && !!match[1] && match[1];
 		})();
 	}
 }
