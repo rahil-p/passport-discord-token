@@ -7,7 +7,7 @@ const DiscordTokenStrategy = require('..');
 const {assert} = chai;
 chai.use(chaiPassportStrategy);
 
-const CLIENT_CONFIG = {clientID: 'foo'};
+const CLIENT_CONFIG = {clientID: 'foo', clientSecret: 'bar'};
 const FAKE_PROFILE = JSON.stringify({
 	id: '268473310986240001',
 	username: 'Discord',
@@ -53,7 +53,7 @@ describe('DiscordTokenStrategy', function discordTokenStrategyTests() {
 
 			after(function strategyCleanup() { strategy._oauth2.get.restore(); });
 
-			const ChaiPassportTest = (done, reqConfig) => chai.passport
+			const ChaiPassportParseTest = (done, reqConfig) => chai.passport
 				.use(strategy)
 				.success((user, info) => {
 					assert.typeOf(user, 'object');
@@ -63,7 +63,7 @@ describe('DiscordTokenStrategy', function discordTokenStrategyTests() {
 				}).req(reqConfig).authenticate({});
 
 			it('Should properly parse `access_token` from body', function bodyParseTest(done) {
-				ChaiPassportTest(done, (req) => {
+				ChaiPassportParseTest(done, (req) => {
 					req.body = {
 						access_token: 'access_token',
 						refresh_token: 'refresh_token',
@@ -72,7 +72,7 @@ describe('DiscordTokenStrategy', function discordTokenStrategyTests() {
 			});
 
 			it('Should properly parse `access_token` from query parameters', function queryParseTest(done) {
-				ChaiPassportTest(done, (req) => {
+				ChaiPassportParseTest(done, (req) => {
 					req.query = {
 						access_token: 'access_token',
 						refresh_token: 'refresh_token',
@@ -81,7 +81,7 @@ describe('DiscordTokenStrategy', function discordTokenStrategyTests() {
 			});
 
 			it('Should properly parse access token from OAuth2 bearer header', function headerTest1(done) {
-				ChaiPassportTest(done, (req) => {
+				ChaiPassportParseTest(done, (req) => {
 					req.headers = {
 						Authorization: 'Bearer access_token',
 						refresh_token: 'refresh_token',
@@ -90,7 +90,7 @@ describe('DiscordTokenStrategy', function discordTokenStrategyTests() {
 			});
 
 			it('Should properly parse access token from OAuth2 bearer header (lowercase)', function headerTest2(done) {
-				ChaiPassportTest(done, (req) => {
+				ChaiPassportParseTest(done, (req) => {
 					req.headers = {
 						authorization: 'Bearer access_token',
 						refresh_token: 'refresh_token',
@@ -98,13 +98,31 @@ describe('DiscordTokenStrategy', function discordTokenStrategyTests() {
 				});
 			});
 
-			it('Should call fail if access token is not provided', function failTest(done) {
+			it('Should call fail if neither access token nor refresh token is provided', function failTest(done) {
 				chai.passport.use(strategy).fail((error) => {
 					assert.typeOf(error, 'object');
 					assert.typeOf(error.message, 'string');
+					assert.valueOf(error.message,
+						'Neither access token nor refresh token could be parsed from the request');
 					done();
 				}).authenticate({});
 			});
+
+			it('Should call error if only a refresh token is provided (with invalid client credentials)',
+				function refreshTest(done) {
+					chai.passport.use(strategy).error((error) => {
+						assert.typeOf(error, 'object');
+						assert.typeOf(error.statusCode, 'number');
+						assert.typeOf(error.data, 'string');
+						assert.valueOf(error.statusCode, 400);
+						assert.valueOf(error.data, '{"client_id": ["Value \\"foo\\" is not snowflake."]}');
+						done();
+					}).req((req) => {
+						req.body = {
+							refresh_token: 'refresh_token',
+						};
+					}).authenticate({});
+				});
 		});
 
 		describe('Authenticate with `passReqToCallback`', function authPassReqToCallbackTest() {

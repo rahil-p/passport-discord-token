@@ -25,6 +25,7 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 * Constructs an instance of the `DiscordTokenStrategy`
 	 * @param {Object} options
 	 * @param {string} options.clientID - client ID of application registered in the Discord Developer Portal
+	 * @param {string} [options.clientSecret] - client secret of application registered in the Discord Developer Portal
 	 * @param {string} [options.accessTokenField='access_token'] - the field in which to look up the access token
 	 * @param {string} [options.refreshTokenField='refresh_token'] the field in which to look up the refresh token
 	 * @param {boolean} [options.checkOAuth2Header] - check for the access token in an OAuth 2.0 `Authorization` header
@@ -35,6 +36,7 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	 */
 	constructor({
 		clientID,
+		clientSecret,
 		accessTokenField = 'access_token',
 		refreshTokenField = 'refresh_token',
 		checkOAuth2Header = true,
@@ -62,35 +64,57 @@ class DiscordTokenStrategy extends OAuth2Strategy {
 	}
 
 	/**
-	 * Authenticates a request by delegating its provided access token to Discord to retrieve the user profile
+	 * Authenticates a request by delegating its provided access token to Discord to retrieve the user profile; if an
+	 * only a refresh token could be parsed, this method will first attempt to exchange it for an access token
 	 * @param {Object} req = HTTP request object
 	 */
 	authenticate(req) {
-		const accessToken = this.lookup(req, this._accessTokenField)
+		let accessToken = this.lookup(req, this._accessTokenField)
 			|| (this._checkOAuth2Header && this.constructor.parseOAuth2Header(req));
-		const refreshToken = this.lookup(req, this._refreshTokenField);
+		let refreshToken = this.lookup(req, this._refreshTokenField);
 
-		if (!accessToken) {
+		if (!accessToken && !refreshToken) {
 			return this.fail({
-				message: `Access token not found in the ${this._accessTokenField} field`,
+				message: 'Neither access token nor refresh token could be parsed from the request',
 			});
 		}
 
-		this._loadUserProfile(accessToken, (error, profile) => {
-			if (error) return this.error(error);
+		/* Called once an access token is obtained (either immediately or after refresh token exchange) */
+		const loadUserProfile = () => {
+			this._loadUserProfile(accessToken, (error, profile) => {
+				if (error) return this.error(error);
 
-			const done = (err, user, info) => {
-				if (err) return this.error(err);
-				if (!user) return this.fail(info);
+				const done = (err, user, info) => {
+					if (err) return this.error(err);
+					if (!user) return this.fail(info);
 
-				return this.success(user, info);
-			};
+					return this.success(user, info);
+				};
 
-			const args = [accessToken, refreshToken, profile, done];
-			if (this._passReqToCallback) args.unshift(req);
+				const args = [accessToken, refreshToken, profile, done];
+				if (this._passReqToCallback) args.unshift(req);
 
-			this._verify(...args);
-		});
+				this._verify(...args);
+			});
+		};
+
+		if (!accessToken && refreshToken) {
+			/* Exchange the refresh token */
+			return this._oauth2.getOAuthAccessToken(
+				refreshToken,
+				{grant_type: 'refresh_token'},
+				(error, _accessToken, _refreshToken) => {
+					if (error) return this.error(error);
+
+					accessToken = _accessToken;
+					refreshToken = _refreshToken;
+
+					loadUserProfile();
+				},
+			);
+		}
+
+		loadUserProfile();
 	}
 
 	/**

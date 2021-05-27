@@ -51,6 +51,7 @@ const DiscordTokenStrategy = require('passport-discord-token');
 
 passport.use(new DiscordTokenStrategy({
     clientID: DISCORD_CLIENT_ID,
+    clientSecret: DISCORD_CLIENT_SECRET,
 }, (accessToken, refreshToken, profile, done) => {
     User.findOrCreate({discordId: profile.id}, (error, user) => {
         return done(error, user);
